@@ -45,6 +45,18 @@ def create_user():
 
     return jsonify(new_user.select_user()), 201
 
+@app.route('/main/<username>')
+def main(username):
+    return "こんにちは" + username + "さん！"
+
+@app.route('/checknum',methods=['POST'])
+def checknum():
+    num = int(request.form.get('num'))
+    if num % 2 == 0:
+        return "偶数です"
+    else:
+        return "奇数です"
+
 if __name__ == '__main__':
     db.create_all()
     app.run(debug=True)
