@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -31,6 +31,19 @@ def test():
 def get_users():
     users = User.query.all()
     return jsonify([user.select_user() for user in users])
+
+@app.route('/users', methods=['POST'])
+def create_user():
+    data = request.get_json()
+    name = data.get('name')
+    if not name:
+        return jsonify({'error': 'Name is required'}), 400
+
+    new_user = User(name=name)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify(new_user.select_user()), 201
 
 if __name__ == '__main__':
     db.create_all()
