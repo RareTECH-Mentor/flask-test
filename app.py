@@ -10,5 +10,9 @@ def hello_world():
 def test():
     return "test"
 
+@app.route('/main/<username>')
+def main(username):
+    return "こんにちは" + username + "さん！"
+
 if __name__ == '__main__':
     app.run(debug=True)
