@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+import mysql.connector
 
 app = Flask(__name__)
 
@@ -18,6 +19,72 @@ class User(db.Model):
             'id': self.id,
             'name': self.name
         }
+    
+db_config = {
+    "host": "flask-test-mysql-db-1",
+    "user": "user",
+    "password": "password",
+    "database": "test_db"
+}
+
+@app.route('/add',methods=['POST'])
+def add_data():
+    data = request.json
+    name = data.get("name")
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO users (name) VALUES(%s)", (name,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"message": "success"})
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
+
+@app.route('/get')
+def get_data():
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users")
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify({"result": result})
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
+
+@app.route('/update',methods=['POST'])
+def update_data():
+    data = request.json
+    id = data.get("id")
+    name = data.get("name")
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET name=(%s) WHERE id=(%s)", (name,id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"message": "success"})
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
+
+@app.route('/delete',methods=['POST'])
+def delete_data():
+    data = request.json
+    id = data.get("id")
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM users WHERE id=(%s)", (id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"message": "success"})
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
 
 @app.route('/')
 def hello_world():
