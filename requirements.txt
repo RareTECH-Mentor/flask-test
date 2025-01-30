@@ -10,3 +10,4 @@ zipp==3.21.0
 Flask-SQLAlchemy
 pymysql
 cryptography
+mysql-connector-python
