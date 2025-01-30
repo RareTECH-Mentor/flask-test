@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, redirect
 from flask_sqlalchemy import SQLAlchemy
 import mysql.connector
 
@@ -26,6 +26,75 @@ db_config = {
     "password": "password",
     "database": "test_db"
 }
+
+@app.route('/signup',methods=['GET'])
+def signup():
+    return render_template('signup.html')
+
+@app.route('/signup',methods=['POST'])
+def signup_user():
+    name = request.form.get('name')
+    print(name)
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO users (name) VALUES(%s)", (name,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return redirect('/users')
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
+    
+@app.route('/users')
+def get_users():
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users")
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return render_template('allusers.html',data=result)
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
+    
+@app.route('/update',methods=['GET'])
+def update():
+    return render_template('update.html')
+
+@app.route('/update',methods=['POST'])
+def update_data():
+    id = request.form.get('id')
+    name = request.form.get('name')
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET name=(%s) WHERE id=(%s)", (name,id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return redirect('/users')
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
+
+@app.route('/delete',methods=['GET'])
+def delete():
+    return render_template('delete.html')
+
+@app.route('/delete',methods=['POST'])
+def delete_data():
+    id = request.form.get('id')
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM users WHERE id=(%s)", (id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return redirect('/users')
+    except mysql.connector.Error as err:
+        return jsonify({"error": str(err)}), 500
 
 @app.route('/add',methods=['POST'])
 def add_data():
@@ -55,36 +124,36 @@ def get_data():
     except mysql.connector.Error as err:
         return jsonify({"error": str(err)}), 500
 
-@app.route('/update',methods=['POST'])
-def update_data():
-    data = request.json
-    id = data.get("id")
-    name = data.get("name")
-    try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
-        cursor.execute("UPDATE users SET name=(%s) WHERE id=(%s)", (name,id))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({"message": "success"})
-    except mysql.connector.Error as err:
-        return jsonify({"error": str(err)}), 500
+# @app.route('/update',methods=['POST'])
+# def update_data():
+#     data = request.json
+#     id = data.get("id")
+#     name = data.get("name")
+#     try:
+#         conn = mysql.connector.connect(**db_config)
+#         cursor = conn.cursor()
+#         cursor.execute("UPDATE users SET name=(%s) WHERE id=(%s)", (name,id))
+#         conn.commit()
+#         cursor.close()
+#         conn.close()
+#         return jsonify({"message": "success"})
+#     except mysql.connector.Error as err:
+#         return jsonify({"error": str(err)}), 500
 
-@app.route('/delete',methods=['POST'])
-def delete_data():
-    data = request.json
-    id = data.get("id")
-    try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM users WHERE id=(%s)", (id,))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({"message": "success"})
-    except mysql.connector.Error as err:
-        return jsonify({"error": str(err)}), 500
+# @app.route('/delete',methods=['POST'])
+# def delete_data():
+#     data = request.json
+#     id = data.get("id")
+#     try:
+#         conn = mysql.connector.connect(**db_config)
+#         cursor = conn.cursor()
+#         cursor.execute("DELETE FROM users WHERE id=(%s)", (id,))
+#         conn.commit()
+#         cursor.close()
+#         conn.close()
+#         return jsonify({"message": "success"})
+#     except mysql.connector.Error as err:
+#         return jsonify({"error": str(err)}), 500
 
 @app.route('/')
 def hello_world():
@@ -94,10 +163,10 @@ def hello_world():
 def test():
     return "test"
 
-@app.route('/users')
-def get_users():
-    users = User.query.all()
-    return jsonify([user.select_user() for user in users])
+# @app.route('/users')
+# def get_users():
+#     users = User.query.all()
+#     return jsonify([user.select_user() for user in users])
 
 @app.route('/users', methods=['POST'])
 def create_user():
